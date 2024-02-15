@@ -1,4 +1,3 @@
-
 import taboolib.common.platform.ProxyCommandSender
 import taboolib.common.platform.command.CommandContext
 import taboolib.common.platform.command.CommandStructure
@@ -8,6 +7,7 @@ import taboolib.common.platform.command.component.CommandComponentLiteral
 import taboolib.module.chat.ComponentText
 import taboolib.module.chat.colored
 import taboolib.module.chat.component
+import taboolib.module.chat.uncolored
 import kotlin.math.ceil
 
 /**
@@ -27,8 +27,8 @@ fun CommandContext<out Any>.error(msg: String,index:Int=-1,lang: String ="zh_cn"
         }
     }
     joinArgs += "  &7&o->${Language[lang,"error"]}\n"
-    val fixIndex = joinArgs.indexOf(args()[errorIndex]) + args()[errorIndex].length / 2
-    joinArgs += "&c${space(fixIndex-3)} └── "
+    val fixIndex = joinArgs.colored().uncolored().indexOf(args()[errorIndex]) + args()[errorIndex].length / 2
+    joinArgs += "&c${space(fixIndex-1)} └── "
     val message = ArrayList<String>()
     for (i in 0..ceil(msg.length / 10.00).toInt()) {
         try {
