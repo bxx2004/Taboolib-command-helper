@@ -1,6 +1,10 @@
+
 import taboolib.common.platform.ProxyCommandSender
 import taboolib.common.platform.command.CommandContext
 import taboolib.common.platform.command.CommandStructure
+import taboolib.common.platform.command.PermissionDefault
+import taboolib.common.platform.command.command
+import taboolib.common.platform.command.component.CommandBase
 import taboolib.common.platform.command.component.CommandComponent
 import taboolib.common.platform.command.component.CommandComponentDynamic
 import taboolib.common.platform.command.component.CommandComponentLiteral
@@ -15,9 +19,26 @@ import kotlin.math.ceil
  * @author bxx2004
  * @since 2024/02/14 20:08
  */
+fun newCommand(name: String,
+               aliases: List<String> = emptyList(),
+               description: String = "",
+               usage: String = "",
+               permission: String = "",
+               permissionMessage: String = "",
+               permissionDefault: PermissionDefault = PermissionDefault.OP,
+               permissionChildren: Map<String, PermissionDefault> = emptyMap(),
+               newParser: Boolean = false,
+               checkPermission: Boolean = true,
+               lang: String = "zh_cn",
+               commandBuilder: CommandBase.() -> Unit,){
+    command(name, aliases, description, usage, permission, permissionMessage, permissionDefault, permissionChildren, newParser){
+        createHelper(checkPermission,lang)
+        commandBuilder(this)
+    }
+}
 fun CommandContext<out Any>.error(msg: String,index:Int=-1,lang: String ="zh_cn"){
     val errorIndex = if (index == -1) args().lastIndex else index
-    var arg = "&c/$name ${args().joinToString(" ").replace(args()[errorIndex],"&c&l&n"+args()[errorIndex])}&c"
+    var arg = "\n&c/$name ${args().joinToString(" ").replace(args()[errorIndex],"&c&l&n"+args()[errorIndex])}&c"
     var joinArgs = arg
     if (joinArgs.length > 25){
         if (errorIndex<=1){
@@ -99,7 +120,11 @@ fun CommandComponent.createHelper(check:Boolean = true,lang:String = "chinese"):
                 cmd.aliases[0]
             }
             is CommandComponentDynamic->{
-                cmd.comment
+                if (cmd.optional){
+                    "「<${cmd.comment}>」"
+                }else{
+                    "<${cmd.comment}>"
+                }
             }
             else ->{
                 base
@@ -149,7 +174,14 @@ fun CommandComponent.createHelper(check:Boolean = true,lang:String = "chinese"):
     }
     execute<ProxyCommandSender> { sender, context, argument ->
         val command = context.command
-        val builder = "\n&7&l ${Language[lang,"command"]}: &c&l/${command.name} &f\\[ ${Language[lang,"alias"]}: &b&L${command.aliases.joinToString()}&f \\] &f\\[ ${Language[lang,"permission"]}: &b&L${command.permission}&f \\]\n".component().buildColored()
+        val builder = "\n&7&l ${Language[lang,"command"]}: &c&l/${command.name}".component().buildColored()
+        if (command.aliases.isNotEmpty()){
+            builder.append(" &f[ ${Language[lang, "alias"]}: &b&L${command.aliases.joinToString()}&f ] ".colored())
+        }
+        if (command.permission.isNotEmpty()){
+            builder.append(" &f[ ${Language[lang, "permission"]}: &b&L${command.permission}&f ] ".colored())
+        }
+        builder.append("\n")
         parent?.let {
             when(this){
                 is CommandComponentLiteral->{
